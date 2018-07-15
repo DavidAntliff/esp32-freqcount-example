@@ -20,4 +20,11 @@ config SAMPLING_WINDOW_GPIO
 
         GPIOs 35-39 are input-only so cannot be used.
  
+config LED_GPIO
+    int "LED GPIO number"
+    range 0 34
+    default 2
+    help
+        GPIO number (IOxx) connected to LED, to show incoming frequency signal visually.
+
 endmenu

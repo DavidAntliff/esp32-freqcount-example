@@ -1,5 +1,8 @@
 # esp32-freqcount-example
 
+[![Build Status](https://travis-ci.org/DavidAntliff/esp32-freqcount-example.svg?branch=master)](https://travis-ci.org/DavidAntliff/esp32-freqcount-example)
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
+
 ## Introduction
 
 This is an example application for the [esp32-freqcount] component.

@@ -38,9 +38,57 @@
 #include "frequency_count.h"
 
 #define TAG "app"
+#define GPIO_SIGNAL_INPUT (CONFIG_FREQ_SIGNAL_GPIO)
+#define GPIO_RMT_GATE     (CONFIG_SAMPLING_WINDOW_GPIO)
+#define PCNT_UNIT         (0)
+#define PCNT_CHANNEL      (PCNT_CHANNEL_0)
+#define RMT_CHANNEL       (RMT_CHANNEL_0)
+#define RMT_MAX_BLOCKS    (2)   // allow up to 2 * 64 * (2 * 32767) RMT periods in window
+#define RMT_CLK_DIV       160   // results in 2us steps (80MHz / 160 = 0.5 MHz
+//#define RMT_CLK_DIV       20    // results in 0.25us steps (80MHz / 20 = 4 MHz
+//#define RMT_CLK_DIV       1     // results in 25ns steps (80MHz / 2 / 1 = 40 MHz)
+
+// The counter is signed 16-bit, so maximum positive value is 32767
+// The filter is unsigned 10-bit, maximum value is 1023. Use full period of maximum frequency.
+// For higher expected frequencies, the sample period and filter must be reduced.
+
+// suitable up to 16,383.5 Hz
+#define SAMPLE_PERIOD 10.0  // seconds
+#define FILTER_LENGTH 1023  // APB @ 80MHz, limits to < 39,100 Hz
+
+// suitable up to 163,835 Hz
+//#define SAMPLE_PERIOD 0.1  // seconds
+//#define FILTER_LENGTH 122  // APB @ 80MHz, limits to < 655,738 Hz
+
+// suitable up to 1,638,350 Hz
+//#define SAMPLE_PERIOD 0.01  // seconds
+//#define FILTER_LENGTH 12  // APB @ 80MHz, limits to < 3,333,333 Hz
+
+// suitable up to 16,383,500 Hz - no filter
+//#define SAMPLE_PERIOD 0.001  // seconds
+//#define FILTER_LENGTH 0  // APB @ 80MHz, limits to < 40 MHz
+
+static void frequency_callback(double hz)
+{
+    ESP_LOGI(TAG, "Frequency %f Hz", hz);
+}
 
 void app_main()
 {
-    xTaskCreate(&frequency_count_task_function, "frequency_count_task", 2048, NULL, 5, NULL);
+    frequency_count_configuration_t * config = malloc(sizeof(*config));
+    config->pcnt_gpio = GPIO_SIGNAL_INPUT;
+    config->pcnt_unit = PCNT_UNIT;
+    config->pcnt_channel = PCNT_CHANNEL;
+    config->rmt_gpio = GPIO_RMT_GATE;
+    config->rmt_channel = RMT_CHANNEL;
+    config->rmt_clk_div = RMT_CLK_DIV;
+    config->rmt_max_blocks = 2;
+    config->sampling_period_seconds = SAMPLE_PERIOD;
+    config->sampling_window_seconds = SAMPLE_PERIOD;
+    config->filter_length = FILTER_LENGTH;
+    config->frequency_update_callback = &frequency_callback;
+
+    // task takes ownership of allocated memory
+    xTaskCreate(&frequency_count_task_function, "frequency_count_task", 4096, config, 5, NULL);
 }
 

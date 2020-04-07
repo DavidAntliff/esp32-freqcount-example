@@ -11,6 +11,7 @@ endif()
 
 if (IDF_VERSION_MAJOR GREATER 3)
   set(PROJECT_ELF ${project_elf})
+  target_compile_definitions(${PROJECT_ELF} PRIVATE INCLUDE_ESP_IDF_VERSION_H)
 else()
   set(PROJECT_ELF ${IDF_PROJECT_EXECUTABLE})
 endif()
